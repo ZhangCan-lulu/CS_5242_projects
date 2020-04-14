@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--num_stages', default=4, type=int, help='stage number')
 parser.add_argument('--num_layers', default=10, type=int, help='layer number in each stage')
 parser.add_argument('--num_f_maps', default=128, type=int, help='embedded feat. dim.')
-parser.add_argument('--features_dim', default=2059, type=int, help='input feat. dim.')
+parser.add_argument('--features_dim', default=2060, type=int, help='input feat. dim.')
 parser.add_argument('--DA_adv', default='rev_grad', type=str, help='adversarial loss (none | rev_grad)')
 parser.add_argument('--DA_adv_video', default='none', type=str, help='video-level adversarial loss (none | rev_grad | rev_grad_ssl | rev_grad_ssl_2)')
 parser.add_argument('--pair_ssl', default='all', type=str, help='pair-feature methods for SSL-DA (all | adjacent)')
@@ -66,7 +66,7 @@ parser.add_argument('--dataset', default="breakfast")
 parser.add_argument('--split', default='6')
 # hyper-parameters
 parser.add_argument('--lr', default=0.0005, type=float, help='learning rate')
-parser.add_argument('--bS', default=4, type=int, help='batch size')
+parser.add_argument('--bS', default=8, type=int, help='batch size')
 parser.add_argument('--alpha', default=0.15, type=float, help='weighting for smoothing loss')
 parser.add_argument('--tau', default=4, type=float, help='threshold to truncate smoothing loss')
 parser.add_argument('--beta', default=[-2, -2], type=float, nargs="+", metavar='M', help='weighting for adversarial loss & ensemble loss ([frame-beta, video-beta])')
@@ -83,7 +83,7 @@ parser.add_argument('--num_epochs', default=200, type=int)
 parser.add_argument('--verbose', default=True, action="store_true")
 parser.add_argument('--use_best_model', type=str, default='target', choices=['none', 'source', 'target'], help='save best model')
 parser.add_argument('--multi_gpu', default=True, action="store_true")
-parser.add_argument('--resume_epoch', default=0,type=int)
+parser.add_argument('--resume_epoch', default=29,type=int)
 #63-71 no video_adv
 # tensorboard
 parser.add_argument('--use_tensorboard', default=True, action='store_true')
@@ -94,7 +94,7 @@ parser.add_argument('--num_frame_video_embedding', default=50, type=int, help='n
 parser.add_argument('--coarse_label', default=True, action="store_true")
 parser.add_argument('--coarse_mode', type=str, default='late', choices=['none', 'early', 'late','all'], help='choose whether use coarse classifier ')
 parser.add_argument('--use_onehot', default=True, action="store_true")
-parser.add_argument('--boundary_on', default=False, action="store_true")
+parser.add_argument('--boundary_on', default=True, action="store_true")
 args = parser.parse_args()
 
 # check whether place_adv & place_sem are valid
@@ -142,7 +142,7 @@ gt_path = args.path_data+args.dataset+"/groundTruth/"
 mapping_file = args.path_data+args.dataset+"/mapping.txt"  # mapping between classes & indices
 coarse_file=args.path_data+args.dataset+"/coarse_label"
 
-pre_inx="new_noatt_coarse_onehot_4bs"
+pre_inx="new_noatt_coarse_onehot_4bs_boundary"
 model_dir = args.path_model+args.dataset+"/split_"+args.split+pre_inx
 results_dir = args.path_result+args.dataset+"/split_"+args.split+pre_inx
  

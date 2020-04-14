@@ -89,19 +89,25 @@ class Trainer:
         eta = args.eta
 
         # multi-GPU
+        # model.cuda()
         if args.multi_gpu and torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
 
         model.train()
-        model.to(device)
+        # model=model.modules
+        #model.to(device)
         if resume_epoch > 0:
-            model.load_state_dict(torch.load(model_dir + "/epoch-" + str(resume_epoch) + ".model"))
+            pretained_param=torch.load(model_dir + "/epoch-" + str(resume_epoch) + ".model")
+            model_dict=model.state_dict()
+            updated_params={k:v for k,v in pretained_param.items() if k in model_dict.keys()}
+            model.load_state_dict(updated_params)
 
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-        lr_sche=optim.lr_scheduler.StepLR(optimizer,step_size=10,gamma=0.5)
+        optimizer = optim.Adam(model.module.parameters(), lr=learning_rate)#.module
+        lr_sche=optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=5,verbose=False, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
+
         # determine batch size
         batch_size_source = batch_size
-        batch_size_target = max(int(batch_gen_target.num_examples/batch_gen_source.num_examples*batch_size_source), 1)
+        batch_size_target = max(int(batch_gen_target.num_examples/batch_gen_source.num_examples*batch_size_source), 2)
         num_iter_epoch = np.ceil(batch_gen_source.num_examples / batch_size_source)
 
         acc_best_source = 0.0  # store the best source acc
@@ -144,8 +150,11 @@ class Trainer:
 
                 # ====== Feed-forward data ====== #
                 # prepare inputs
+
                 input_source, label_source,coa_label_source, mask_source = batch_gen_source.next_batch(batch_size_source, 'source',args.use_onehot)
-                input_source, label_source,coa_label_source, mask_source = input_source.to(device), label_source.to(device),coa_label_source.to(device), mask_source.to(device)
+                # input_source, label_source,coa_label_source, mask_source = input_source.to(device), label_source.to(device),coa_label_source.to(device), mask_source.to(device)
+                input_source, label_source, coa_label_source, mask_source = input_source.cuda(), label_source.cuda(), coa_label_source.cuda(), mask_source.cuda()
+
                 # in(b,feat_dim,len_frm) label(b,ken_frm),mask(b,48,frm)
 
                 # drop some source frames (including labels) for semi-supervised learning
@@ -155,7 +164,8 @@ class Trainer:
                 label_source_new, mask_source_new = self.ctrl_video_label_length(label_source, mask_source, ratio_label_source)
 
                 input_target, label_target,coa_label_target, mask_target = batch_gen_target.next_batch(batch_size_target, 'target',args.use_onehot)
-                input_target, label_target,coa_label_target, mask_target = input_target.to(device), label_target.to(device),coa_label_target.to(device), mask_target.to(device)
+                # input_target, label_target,coa_label_target, mask_target = input_target.to(device), label_target.to(device),coa_label_target.to(device), mask_target.to(device)
+                input_target, label_target, coa_label_target, mask_target = input_target.cuda(), label_target.cuda(), coa_label_target.cuda(), mask_target.cuda()
 
                 # forward-pass data
                 # label: (batch, frame#)
@@ -163,10 +173,8 @@ class Trainer:
                 # feat: (batch, stage#, dim, frame#)
                 # pred_d: (batch x frame#, stage#, class#, 2)
                 # pred_d_video: (batch x seg#, stage#, 2)
-                pred_source, prob_source, feat_source, pred_target, prob_target, feat_target, \
-                pred_d, pred_d_video, label_d, label_d_video, \
-                pred_source_2, prob_source_2, pred_target_2, prob_target_2,\
-                coa_source_labels,coa_target_labels \
+
+                pred_source, prob_source, feat_source, pred_target, prob_target, feat_target, pred_d, pred_d_video, label_d, label_d_video, pred_source_2, prob_source_2, pred_target_2, prob_target_2,coa_source_labels,coa_target_labels \
                     = model(input_source, input_target, mask_source, mask_target, beta_in, reverse=False)
 
                 num_stages = pred_source.shape[1]
@@ -200,20 +208,21 @@ class Trainer:
                         loss += alpha * torch.mean(torch.clamp(self.mse(F.log_softmax(p_2[:, :, 1:], dim=1), F.log_softmax(p_2.detach()[:, :, :-1], dim=1)), min=0, max=tau ** 2) * mask_source_new[:, :, 1:])
 
                 ###
-                if use_coarse:
-                    p_s=coa_source_labels[0]
-                    p_t=coa_target_labels[0]
-                    loss+=self.ce(p_s.transpose(2, 1).contiguous().view(-1, self.coa_classes), coa_label_source.view(-1))
-                    loss += self.ce(p_t.transpose(2, 1).contiguous().view(-1, self.coa_classes),
-                                    coa_label_target.view(-1))
-                    if coarse_mode=="late" or coarse_mode=="all":
-                        p_s = coa_source_labels[1]
-                        p_t = coa_target_labels[1]
-                        loss += self.ce(p_s.transpose(2, 1).contiguous().view(-1, self.coa_classes),
-                                        coa_label_source.view(-1))
-                        loss += self.ce(p_t.transpose(2, 1).contiguous().view(-1, self.coa_classes),
-                                        coa_label_target.view(-1))
-                ##
+                # if use_coarse:
+                #     if coarse_mode == "early" or coarse_mode == "all":
+                #         p_s=coa_source_labels[0]
+                #         p_t=coa_target_labels[0]
+                #         loss+=self.ce(p_s.transpose(2, 1).contiguous().view(-1, self.coa_classes), coa_label_source.view(-1))
+                #         loss += self.ce(p_t.transpose(2, 1).contiguous().view(-1, self.coa_classes),
+                #                         coa_label_target.view(-1))
+                #     if coarse_mode=="late" or coarse_mode=="all":
+                #         p_s = coa_source_labels[1]
+                #         p_t = coa_target_labels[1]
+                #         loss += self.ce(p_s.transpose(2, 1).contiguous().view(-1, self.coa_classes),
+                #                         coa_label_source.view(-1))
+                #         loss += self.ce(p_t.transpose(2, 1).contiguous().view(-1, self.coa_classes),
+                #                         coa_label_target.view(-1))
+                #
                 # ====== Domain Adaptation ====== #
                 if use_target != 'none':
                     num_class_domain = pred_d.size(2)
@@ -353,13 +362,15 @@ class Trainer:
                 total_target += torch.sum(mask_target[:, 0, :]).item()
 
                 if iter_batch%20==0 and iter_batch!=0:
-                    print("[epoch %d,Iter %d/%d]: epoch loss = %f,   acc (S) = %f,   acc (T) = %f" % (epoch + 1,iter_batch, num_iter_epoch,epoch_loss / iter_batch, float(correct_source) / total_source,float(correct_target) / total_target))  # uncomment for debugging
+                    print("[epoch %d,Iter %d/%d]: epoch loss = %f,   acc (S) = %f,   acc (T) = %f, lr=%f" % (epoch + 1,iter_batch, num_iter_epoch,epoch_loss / iter_batch, float(correct_source) / total_source,float(correct_target) / total_target,optimizer.param_groups[0]['lr']))  # uncomment for debugging
                     writer.add_scalars("Iteration_acc", {"source":float(correct_source) / total_source,"target":float(correct_target) / total_target},epoch*iter_batch)
 
                 iter_batch += 1
 
             batch_gen_source.reset()
             batch_gen_target.reset()
+
+
             random.shuffle(batch_gen_source.list_of_examples)
             random.shuffle(batch_gen_target.list_of_examples)  # use it only when using target data
 
@@ -368,6 +379,8 @@ class Trainer:
 
             acc_epoch_source = float(correct_source) / total_source
             acc_epoch_target = float(correct_target) / total_target
+
+            lr_sche.step(acc_epoch_target)
             # update the "best" model (best training acc)
             if acc_epoch_source > acc_best_source:
                 acc_best_source = acc_epoch_source
@@ -399,6 +412,7 @@ class Trainer:
 
         if use_tensorboard:
             writer.close()
+
 
     def select_data_stage(self, s, pred, prob, prob_2, feat, label):
         dim_feat = feat.size(2)
@@ -469,6 +483,7 @@ class Trainer:
             id_keep = id_keep.to(input_data.get_device())
 
         # filter the inputs w/ the above indices
+
         input_data_filtered = input_data[:, :, id_keep]
         label_filtered = label[:, id_keep]
         mask_filtered = mask[:, :, id_keep]

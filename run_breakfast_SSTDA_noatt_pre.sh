@@ -2,9 +2,9 @@
 # ----------------------------------------------------------------------------------
 
 # === Mode Switch On/Off === #
-training=true # true | false
+training=false # true | false
 predict=true # true | false
-eval=true # true | false
+eval=false # true | false
 
 # === Paths === #
 path_data=/home/zhangc/data/preject_data/SSTDA_data/Datasets/action-segmentation/ # user-defined
@@ -18,8 +18,8 @@ use_best_model=target # none | source
 num_seg=2 # number of segments for each video (SSTDA: 2 | VCOP: 3 | others: 1)
 
 # SSTDA
-DA_adv=rev_grad # none | rev_grad
-DA_adv_video=rev_grad_ssl # none | rev_grad_ssl
+DA_adv=none # none | rev_grad
+DA_adv_video=none #rev_grad_ssl # none | rev_grad_ssl
 use_attn=none # none | domain_attn
 DA_ent=none # none | attn
 
@@ -30,7 +30,7 @@ multi_adv_2=N # Y | N
 method_centroid=none # none | prob_hard
 
 # JAN
-DA_dis=none # none | JAN
+DA_dis=JAN # none | JAN
 
 # MCD / SWD
 DA_ens=none # none | MCD | SWD
@@ -44,7 +44,7 @@ iter_max_1=50000
 iter_max_nu=16000000
 mu=0.4251
 eta=0
-lr=0.0003
+lr=0.00003
 
 # === Main Program === #
 echo 'use_target: '$use_target', dataset: '$dataset
@@ -56,7 +56,7 @@ do
     # train
     if ($training)
     then
-        python main.py --path_data=$path_data --path_model=$path_model --path_result=$path_result \
+        python main_pre.py --path_data=$path_data --path_model=$path_model --path_result=$path_result \
         --action=train --dataset=$dataset --split=$split --lr $lr --use_target $use_target \
         --DA_adv $DA_adv --DA_adv_video $DA_adv_video --num_seg $num_seg --beta -2 -2 --iter_max_beta $iter_max_0 $iter_max_1 \
         --DA_ent $DA_ent --mu $mu --use_attn $use_attn \
@@ -71,7 +71,7 @@ do
     # predict
     if ($predict)
     then
-        python main.py --path_data=$path_data --path_model=$path_model --path_result=$path_result \
+        python main_pre.py --path_data=$path_data --path_model=$path_model --path_result=$path_result \
         --action=predict --dataset=$dataset --split=$split --lr $lr  --use_target $use_target \
         --DA_adv_video $DA_adv_video --num_seg $num_seg --use_attn $use_attn \
         --multi_adv N $multi_adv_2 --method_centroid $method_centroid --DA_ens $DA_ens --SS_video $SS_video \

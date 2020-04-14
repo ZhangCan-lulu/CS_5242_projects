@@ -98,9 +98,10 @@ def main():
     parser.add_argument('--split_target', default='0', help='split for target data (0: no additional split for target)')
 
     args = parser.parse_args()
+    pre_inx = "new_noatt_coarse_onehot_4bs_boundary"
 
     ground_truth_path = args.path_data+args.dataset+"/groundTruth/"
-    recog_path = args.path_result+args.dataset+"/split_"+args.split+"/"
+    recog_path = args.path_result+args.dataset+"/split_"+args.split+pre_inx+"/"
     file_list = args.path_data+args.dataset+"/splits/test.split"+args.split+".bundle"
     if args.split_target != '0':
         file_list = args.path_data + args.dataset + "/splits/test_test_" + args.split_target + ".split" + args.split + ".bundle"

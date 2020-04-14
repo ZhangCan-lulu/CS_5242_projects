@@ -1,11 +1,9 @@
-# Action Segmentation with Joint Self-Supervised Temporal Domain Adaptation
+# NUS-CS5242-projects(video classification)
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/action-segmentation-with-joint-self/action-segmentation-on-gtea)](https://paperswithcode.com/sota/action-segmentation-on-gtea?p=action-segmentation-with-joint-self)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/action-segmentation-with-joint-self/action-segmentation-on-50-salads)](https://paperswithcode.com/sota/action-segmentation-on-50-salads?p=action-segmentation-with-joint-self)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/action-segmentation-with-joint-self/action-segmentation-on-breakfast)](https://paperswithcode.com/sota/action-segmentation-on-breakfast?p=action-segmentation-with-joint-self)
 
 ---
-This is the official PyTorch implementation of our paper:
+Implement based on the official PyTorch of the paper:
 
 **Action Segmentation with Joint Self-Supervised Temporal Domain Adaptation**  
 [__***Min-Hung Chen***__](https://www.linkedin.com/in/chensteven), [Baopu Li](https://www.linkedin.com/in/paul-lee-46b2382b/), [Yingze Bao](https://www.linkedin.com/in/yingze/), [Zsolt Kira](https://www.cc.gatech.edu/~zk15/), [Ghassan AlRegib (Advisor)](https://ghassanalregib.info/) <br>
@@ -16,7 +14,6 @@ This is the official PyTorch implementation of our paper:
 <img src="webpage/Overview.png?raw=true" width="70%">
 </p>
 
-Despite the recent progress of fully-supervised action segmentation techniques, the performance is still not fully satisfactory. One main challenge is the problem of spatiotemporal variations (e.g. different people may perform the same activity in various ways). Therefore, we exploit unlabeled videos to address this problem by reformulating the action segmentation task as a cross-domain problem with domain discrepancy caused by spatio-temporal variations. To reduce the discrepancy, we propose **Self-Supervised Temporal Domain Adaptation (SSTDA)**, which contains two self-supervised auxiliary tasks (binary and sequential domain prediction) to jointly align cross-domain feature spaces embedded with local and global temporal dynamics, achieving better performance than other Domain Adaptation (DA) approaches. On three challenging benchmark datasets (GTEA, 50Salads, and Breakfast), SSTDA outperforms the current state-of-the-art method by large margins (e.g. for the F1@25 score, from 59.6% to 69.1% on Breakfast, from 73.4% to 81.5% on 50Salads, and from 83.6% to 89.1% on GTEA), and requires only 65% of the labeled training data for comparable performance, demonstrating the usefulness of adapting to unlabeled target videos across variations.
 
 ---
 ## Requirements
@@ -38,8 +35,8 @@ conda env create -f environment.yml
 ## Data Preparation
 * Clone the this repository:
 ```
-git clone https://gitlab.svail.baidu.com/steve/action-segmentation-DA.git
-cd action-segmentation-DA
+git clone https://github.com/lusindazc/CS_5242_projects.git
+cd SSTDA-master
 ```
 * Download the [Dataset](https://www.dropbox.com/s/yodx2dknti0ah2v/Datasets.zip?dl=0) folder, which contains the features and the ground truth labels. (~30GB)
 * Extract it so that you have the `Datasets` folder.
@@ -53,7 +50,7 @@ cd action-segmentation-DA
 * You can simply copy any script to the main folder (same location as all the `.py` files), and run the script as below:
 ```
 # one example
-bash run_gtea_SSTDA.sh
+bash run_breakfast_SSTDA_noatt_1.sh
 ```
 The script will do training, predicting and evaluation for all the splits on the dataset (`<dataset>`) using the method (`<method>`).
 
@@ -82,17 +79,3 @@ If you find this repository useful, please cite our paper:
 }
 ```
 
----
-### Acknowledgments
-This work was done with the support from [**OLIVES**](https://ghassanalregib.info/)@GT. <br>
-Feel free to check our lab's [Website](https://ghassanalregib.info/) and [GitHub](https://github.com/olivesgatech) for other interesting work!!!
-
-
-Some codes are borrowed from [ms-tcn](https://github.com/yabufarha/ms-tcn), [TA3N](https://github.com/cmhungsteve/TA3N), [swd_pytorch](https://github.com/krumo/swd_pytorch), and [VCOP](https://github.com/xudejing/VCOP).
-
-
----
-### Contact
-[Min-Hung Chen](https://www.linkedin.com/in/chensteven) <br>
-cmhungsteve AT gatech DOT edu <br>
-[<img align="left" src="webpage/OLIVES_new.png" width="15%">](https://ghassanalregib.info/)

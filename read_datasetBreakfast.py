@@ -59,6 +59,8 @@ def generate_pre(split_load, actions_dict, GT_folder, DATA_folder):
         for iind in loc_ind[1:]:
             labels=brk_data[start:iind]
             labels_num=[actions_dict[da] for da in labels]
+            # mid_pos=len(labels_num)//9
+            # labels_num=labels_num[mid_pos:-5]
             prediction=np.argmax(np.bincount(labels_num))
             submisson.append([ID_pd, prediction])
             ID_pd += 1

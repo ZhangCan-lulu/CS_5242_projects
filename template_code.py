@@ -12,7 +12,7 @@ split = 'test'
 train_split =  os.path.join(COMP_PATH, '/home/zhangc/data/preject_data/SSTDA_data/Datasets/action-segmentation/breakfast/splits/train.split6.bundle') #Train Split
 test_split  =  os.path.join(COMP_PATH, '/home/zhangc/data/preject_data/SSTDA_data/Datasets/action-segmentation/breakfast/splits/test.split6.bundle') #Test Split
 GT_folder =  os.path.join(COMP_PATH, '/home/zhangc/data/preject_data/SSTDA_data/Datasets/action-segmentation/breakfast/groundTruth/') #Ground Truth Labels for each training video
-DATA_folder =  os.path.join(COMP_PATH, '/home/zhangc/file/lectures/CS5242_Deep_neural_network/Project_video_classification/action_recognition_breakfast/SSTDA/SSTDA-master/results/breakfast/split_6new_noatt_coarse_onehot/') #Frame I3D features for all videos
+DATA_folder =  os.path.join(COMP_PATH, '/home/zhangc/file/lectures/CS5242_Deep_neural_network/Project_video_classification/action_recognition_breakfast/SSTDA/SSTDA-master/results/breakfast/split_6new_noatt_coarse_onehot_4bs_boundary/') #Frame I3D features for all videos
 mapping_loc =  os.path.join(COMP_PATH, '/home/zhangc/data/preject_data/SSTDA_data/Datasets/action-segmentation/breakfast/mapping.txt')
 
 actions_dict = read_mapping_dict(mapping_loc)

@@ -97,8 +97,8 @@ class MultiStageModel(nn.Module):
         self.stages = nn.ModuleList([copy.deepcopy(SingleStageModel(num_layers, num_f_maps, num_classes, num_classes, self.DA_ens)) for s in range(num_stages-1)])
         if self.coar_mode=="early" or self.coar_mode=="all":
             dim_in=args.features_dim#+num_coa_class
-        self.stage_coarse = SingleStageModel(num_layers, num_f_maps, dim_in, num_coa_class, self.DA_ens)
-        self.stage1 = SingleStageModel(num_layers, num_f_maps, num_f_maps, num_classes, self.DA_ens)
+        self.stage_coarse = SingleStageModel(num_layers, num_classes, num_classes, num_coa_class, self.DA_ens)
+        self.stage1 = SingleStageModel(num_layers,  num_f_maps,dim_in, num_classes, self.DA_ens)
         #self.stage_coarse_late = SingleStageModel(num_layers, num_f_maps, num_classes, num_coa_class, self.DA_ens)
             #self.stage_coarse = SingleStageModel(num_layers, num_f_maps, dim_in, num_coa_class, self.DA_ens)
             #self.stage1=SingleStageModel(num_layers, num_f_maps, num_f_maps, num_classes, self.DA_ens)
@@ -168,10 +168,10 @@ class MultiStageModel(nn.Module):
     def forward(self, x_s, x_t, mask_s, mask_t, beta, reverse):
         # forward source & target data at the same time
         pred_source, prob_source, feat_source, feat_source_video, pred_d_source, pred_d_source_video, label_d_source, label_d_video_source, pred_source_2, prob_source_2,coa_source_labels \
-            = self.forward_domain(x_s, mask_s, 0, beta, reverse)
+            = self.forward_domain(x_s, mask_s, 0, beta, reverse) # #,coa_source_labels \
         pred_target, prob_target, feat_target, feat_target_video, pred_d_target, pred_d_target_video, label_d_target, label_d_video_target, pred_target_2, prob_target_2,coa_target_labels \
-            = self.forward_domain(x_t, mask_t, 1, beta, reverse)
-
+            = self.forward_domain(x_t, mask_t, 1, beta, reverse) #,coa_target_labels
+        #coa_source_labels,coa_target_labels
         # concatenate domain predictions & labels (frame-level)
         pred_d = torch.cat((pred_d_source, pred_d_target), 0)
         label_d = torch.cat((label_d_source, label_d_target), 0).long()
@@ -247,14 +247,14 @@ class MultiStageModel(nn.Module):
             x=coa_out_feat
 
         out_feat = self.stage1(x)
-        if reverse:  # reverse the gradient
-            out_feat = GradRevLayer.apply(out_feat, beta[0])
+        # if reverse:  # reverse the gradient
+        #     out_feat = GradRevLayer.apply(out_feat, beta[0])
         out = self.stage1.conv_out(out_feat)
 
         if self.coar_mode=="late" or self.coar_mode=="all":
             coa_out_feat2 = self.stage_coarse(out)
-            if reverse:  # reverse the gradient
-                coa_out_feat2 = GradRevLayer.apply(coa_out_feat2, beta[0])
+            # if reverse:  # reverse the gradient
+            #     coa_out_feat2 = GradRevLayer.apply(coa_out_feat2, beta[0])
 
             coa_out2 = self.stage_coarse.conv_out(coa_out_feat2)  # out: (batch, class#, frame#)
 
@@ -268,6 +268,8 @@ class MultiStageModel(nn.Module):
         #prob_coa=F.softmax(coa_out,dim=1)
         ##
         # compute domain predictions for single stage
+        if reverse:  # reverse the gradient
+            out_feat = GradRevLayer.apply(out_feat, beta[0])
         out_d, out_d_video, lb_d, lb_d_video, out_feat_video \
             = self.forward_stage(out_feat, prob, beta, mask, domain_GT)
 
@@ -302,8 +304,8 @@ class MultiStageModel(nn.Module):
         for s in self.stages:
             out_feat = s(prob)
 
-            if reverse:  # reverse the gradient
-                out_feat = GradRevLayer.apply(out_feat, beta[0])
+            # if reverse:  # reverse the gradient
+            #     out_feat = GradRevLayer.apply(out_feat, beta[0])
 
             out = s.conv_out(out_feat)
             out_2 = out.clone()
@@ -313,6 +315,9 @@ class MultiStageModel(nn.Module):
             prob_2 = F.softmax(out_2, dim=1)  # prob: (batch, class#, frame#)
 
             # compute domain predictions for single stage
+            if reverse:  # reverse the gradient
+                out_feat = GradRevLayer.apply(out_feat, beta[0])
+
             out_d, out_d_video, lb_d, lb_d_video, out_feat_video \
                 = self.forward_stage(out_feat, prob, beta, mask, domain_GT)
 
