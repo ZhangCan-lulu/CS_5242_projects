@@ -66,16 +66,4 @@ The script will do training, predicting and evaluation for all the splits on the
 * We DO NOT recommend to edit other parts (e.g. `# === Config & Setting === #
 `); otherwise the implementation may be different.
 
----
-## Citation
-If you find this repository useful, please cite our paper:
-```
-@inproceedings{chen2020action,
-  title={Action Segmentation with Joint Self-Supervised Temporal Domain Adaptation},
-  author={Chen, Min-Hung and Li, Baopu and Bao, Yingze and AlRegib, Ghassan and Kira, Zsolt},
-  booktitle={IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-  year={2020},
-  url={https://arxiv.org/abs/2003.02824}
-}
-```
 
